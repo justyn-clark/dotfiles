@@ -50,3 +50,5 @@
 
 [rerere]
 	enabled = true
+[user]
+	email = ijustynclark@gmail.com
