@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "==> Pre-push guardrails"
+
+DOTFILES="$HOME/.dotfiles"
+GITLEAKS_CONFIG="$DOTFILES/guardrails/gitleaks.toml"
+
+if command -v gitleaks &>/dev/null; then
+  echo "    Running gitleaks on history..."
+  if [[ -f "$GITLEAKS_CONFIG" ]]; then
+    gitleaks detect -v --redact --config "$GITLEAKS_CONFIG" || {
+      echo "!!! gitleaks found secrets in history. Push blocked."
+      exit 1
+    }
+  else
+    gitleaks detect -v --redact || {
+      echo "!!! gitleaks found secrets in history. Push blocked."
+      exit 1
+    }
+  fi
+else
+  echo "    gitleaks not found -- skipping"
+fi
+
+echo "    Pre-push passed."

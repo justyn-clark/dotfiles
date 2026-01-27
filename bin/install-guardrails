@@ -31,12 +31,12 @@ GITLEAKS_CONFIG="$DOTFILES/guardrails/gitleaks.toml"
 if command -v gitleaks &>/dev/null; then
   echo "    Running gitleaks..."
   if [[ -f "$GITLEAKS_CONFIG" ]]; then
-    gitleaks detect --no-git -v --redact --config "$GITLEAKS_CONFIG" --staged || {
+    gitleaks detect --no-git -v --redact --config "$GITLEAKS_CONFIG" || {
       echo "!!! gitleaks found potential secrets. Commit blocked."
       exit 1
     }
   else
-    gitleaks detect --no-git -v --redact --staged || {
+    gitleaks detect --no-git -v --redact || {
       echo "!!! gitleaks found potential secrets. Commit blocked."
       exit 1
     }

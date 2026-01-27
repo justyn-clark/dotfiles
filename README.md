@@ -12,25 +12,78 @@ A portable, terminal-first macOS development environment built for speed and rep
 - **Boss scripts**: `dev`, `tmuxp`, `cockpit`, `j`
 - **Guardrails**: gitleaks pre-commit/pre-push hooks, secret pattern detection
 
-## Installation
+## Installation (one-time setup)
 
 ```bash
-# 1. Clone
+# 1. Clone to ~/.dotfiles (or symlink your existing clone there)
 git clone https://github.com/YOUR_USER/dotfiles.git ~/.dotfiles
 
-# 2. Bootstrap (installs brew packages, links configs, sets up hooks)
+# 2. Bootstrap -- installs all brew packages, symlinks configs, sets up hooks
 ~/.dotfiles/bin/bootstrap-mac
 
-# 3. Restart terminal
+# 3. Restart your terminal
 exec zsh
 
 # 4. Start tmux and install plugins
 tmux
 # Press Ctrl-a I (capital I) to install TPM plugins
 
-# 5. Build repo jump cache
+# 5. Build the repo jump cache
 j --reindex
 ```
+
+If you cloned somewhere else (e.g. `~/Documents/.../dotfiles`), symlink it:
+
+```bash
+ln -s /path/to/your/dotfiles ~/.dotfiles
+~/.dotfiles/bin/bootstrap-mac
+```
+
+After bootstrap, all tools and commands are globally available via `~/bin`.
+
+## Using it in a project
+
+The dotfiles install **global commands** -- you use them inside any repo.
+There is nothing to install per-project. Just `cd` into a repo and go.
+
+### Quick start: open a project
+
+```bash
+cd ~/projects/my-app
+dev
+```
+
+`dev` auto-detects the project type and launches a tmux session with the
+right windows (editor, shell, server, git, etc). Detection rules:
+
+| Signal files | Template | Windows |
+|---|---|---|
+| turbo.json, pnpm-workspace.yaml, nx.json | fullstack | editor, shell, web, api, worker, git |
+| package.json | api | editor, shell, server, git |
+| go.mod | api | editor, shell, server, git |
+| pyproject.toml, requirements.txt, uv.lock | api | editor, shell, server, git |
+| Dockerfile, docker-compose.yml, infra/ | infra | editor, shell, tf, git |
+| (none of the above) | web | editor, shell, git |
+
+### Quick start: run repo tasks
+
+```bash
+cd ~/projects/my-app
+cockpit              # opens fzf menu: dev, test, lint, build, ...
+cockpit test         # runs test command directly (auto-detects stack + pm)
+```
+
+### Quick start: jump between repos
+
+```bash
+j                    # fzf picker across all your repos
+j myapp              # pre-filtered
+```
+
+### Optional: customize per repo
+
+Drop a `.cockpit.yml` or `.tmuxp.yml` in any repo root to override defaults.
+See [Per-repo configuration](#per-repo-configuration) below.
 
 ## Repo structure
 
@@ -65,46 +118,20 @@ j --reindex
   .gitignore
 ```
 
-## Daily commands
+## Command reference
 
-### `dev` - Launch a tmux session for the current project
-
-Auto-detects the project type (node/go/python/infra/fullstack) and opens
-a tmux session with appropriate windows (editor, shell, server, git, etc).
-
-```bash
-cd ~/projects/my-api
-dev
-```
-
-### `tmuxp` - Tmux session templates
-
-```bash
-tmuxp web         # editor, shell, git
-tmuxp api         # editor, shell, server, git
-tmuxp fullstack   # editor, shell, web, api, worker, git
-tmuxp             # interactive fzf picker
-```
-
-### `cockpit` - Repo action menu
-
-Interactive fzf menu for common repo actions (dev, test, lint, build, etc).
-Auto-detects the stack and package manager.
-
-```bash
-cockpit           # fzf picker
-cockpit test      # run tests directly
-```
-
-### `j` - Repo jump
-
-Fuzzy-find and jump to any git repo under your dev directories.
-
-```bash
-j                 # fzf picker
-j myproj          # pre-filtered query
-j --reindex       # rebuild cache
-```
+| Command | What it does |
+|---|---|
+| `dev` | Auto-detect project type, launch tmux session with right windows |
+| `dev /path/to/repo` | Same, but for a specific path |
+| `tmuxp api` | Launch tmux with a named template (web, api, worker, infra, fullstack) |
+| `tmuxp` | Interactive fzf template picker |
+| `cockpit` | fzf menu of repo actions (dev, test, lint, build, docker, git...) |
+| `cockpit test` | Run a specific action directly |
+| `j` | Fuzzy-find and jump to any git repo |
+| `j --reindex` | Rebuild the repo cache |
+| `c` | Alias for `cockpit` |
+| `jj` | Alias for `j` |
 
 ## Per-repo configuration
 
