@@ -1,6 +1,26 @@
 # ~/.dotfiles/zsh/zshrc -- sourced by ~/.zshrc (symlinked)
 # -------------------------------------------------------
 
+# Powerlevel10k instant prompt (must stay near top)
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# --- Zinit plugin manager ---
+export ZINIT_HOME="$HOME/.zsh_plugins/zinit"
+if [[ -r "$ZINIT_HOME/bin/zinit.zsh" ]]; then
+  source "$ZINIT_HOME/bin/zinit.zsh"
+elif [[ -r "$ZINIT_HOME/zinit.zsh" ]]; then
+  source "$ZINIT_HOME/zinit.zsh"
+fi
+
+if command -v zinit &>/dev/null; then
+  zinit light romkatv/powerlevel10k
+  zinit light zsh-users/zsh-autosuggestions
+  zinit light zsh-users/zsh-completions
+  zinit light zsh-users/zsh-syntax-highlighting  # keep last
+fi
+
 # PATH
 export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 
@@ -50,3 +70,64 @@ fi
 # Source additional config
 source "$HOME/.dotfiles/zsh/exports.zsh"
 source "$HOME/.dotfiles/zsh/aliases.zsh"
+
+# --- Runtime toolchains ---
+
+# nvm
+export NVM_DIR="$HOME/.nvm"
+[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
+[[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+[[ -s "$HOME/.bun/_bun" ]] && source "$HOME/.bun/_bun"
+
+# pnpm
+export PNPM_HOME="$HOME/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+# yarn
+export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+
+# deno
+[[ -f "$HOME/.deno/env" ]] && source "$HOME/.deno/env"
+
+# cargo/rust
+export PATH="$HOME/.cargo/bin:$PATH"
+
+# mise (polyglot version manager)
+if [[ -x "$HOME/.local/bin/mise" ]]; then
+  eval "$("$HOME/.local/bin/mise" activate zsh)"
+fi
+
+# conda
+if [[ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]]; then
+  source "$HOME/miniconda3/etc/profile.d/conda.sh"
+elif [[ -d "$HOME/miniconda3" ]]; then
+  export PATH="$HOME/miniconda3/bin:$PATH"
+fi
+
+# postgresql (keg-only)
+[[ -d "/opt/homebrew/opt/postgresql@18/bin" ]] && export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"
+
+# terraform completions
+autoload -U +X bashcompinit && bashcompinit
+[[ -x /opt/homebrew/bin/terraform ]] && complete -o nospace -C /opt/homebrew/bin/terraform terraform
+
+# LM Studio CLI
+[[ -d "$HOME/.lmstudio/bin" ]] && export PATH="$PATH:$HOME/.lmstudio/bin"
+
+# opencode
+[[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH"
+
+export NODE_OPTIONS="--dns-result-order=ipv4first"
+
+# fzf (from installer)
+[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
+
+# Powerlevel10k config (run p10k configure to customize)
+[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh

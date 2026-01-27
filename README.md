@@ -41,6 +41,43 @@ ln -s /path/to/your/dotfiles ~/.dotfiles
 
 After bootstrap, all tools and commands are globally available via `~/bin`.
 
+## What happens to my existing shell config?
+
+**bootstrap-mac does not destroy your existing setup.** It merges with it.
+
+When `link-dotfiles` runs, it checks each target (e.g. `~/.zshrc`). If a file
+already exists, it gets backed up with a timestamp suffix before the symlink
+is created:
+
+```
+~/.zshrc  -->  renamed to ~/.zshrc.backup.20260127114717
+~/.zshrc  -->  symlinked to ~/.dotfiles/zsh/zshrc (new)
+```
+
+The same happens for `~/.tmux.conf`, `~/.gitconfig`, and `~/.config/nvim`.
+
+**After bootstrap, there is one config file** -- `~/.dotfiles/zsh/zshrc` --
+and it contains everything: the new dotfiles additions (fzf, bat, delta,
+direnv, aliases, exports) plus your existing setup (zinit plugins, prompt
+theme, runtime toolchains like nvm/bun/mise/conda, PATH entries).
+
+The symlink chain:
+
+```
+~/.zshrc  -->  ~/.dotfiles/zsh/zshrc
+                   sources ~/.dotfiles/zsh/exports.zsh
+                   sources ~/.dotfiles/zsh/aliases.zsh
+```
+
+**If you had custom shell config before installing**, check your backup file
+and merge anything that's missing into `~/.dotfiles/zsh/zshrc`. The dotfiles
+version already includes sections for common runtimes (nvm, bun, pnpm, deno,
+cargo, mise, conda) -- uncomment or adjust as needed.
+
+**Re-running is safe.** Every script is idempotent. Running `bootstrap-mac`
+again will skip installed packages (prints `ok`), skip correct symlinks, and
+overwrite hook files in place. No duplicates, no damage.
+
 ## Using it in a project
 
 The dotfiles install **global commands** -- you use them inside any repo.
