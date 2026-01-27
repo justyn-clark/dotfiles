@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# dev -- auto-detect project type and launch tmuxp with the right template
+# Usage: dev [path]
+
+ROOT="${1:-.}"
+ROOT="$(cd "$ROOT" && pwd)"
+cd "$ROOT"
+
+detect_template() {
+  # Monorepo / fullstack signals
+  if [[ -f "turbo.json" || -f "pnpm-workspace.yaml" || -f "nx.json" ]]; then
+    echo "fullstack"
+    return
+  fi
+
+  # Node
+  if [[ -f "package.json" ]]; then
+    echo "api"
+    return
+  fi
+
+  # Go
+  if [[ -f "go.mod" ]]; then
+    echo "api"
+    return
+  fi
+
+  # Python
+  if [[ -f "pyproject.toml" || -f "requirements.txt" || -f "uv.lock" || -f "setup.py" ]]; then
+    echo "api"
+    return
+  fi
+
+  # Infra signals
+  if [[ -f "Dockerfile" || -f "docker-compose.yml" || -d "infra" || -d "terraform" ]]; then
+    echo "infra"
+    return
+  fi
+
+  echo "web"
+}
+
+TEMPLATE="$(detect_template)"
+echo "==> Detected template: $TEMPLATE"
+
+# Hand off to tmuxp
+exec tmuxp "$TEMPLATE"

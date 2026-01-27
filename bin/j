@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# j -- repo jump with cached index
+# Usage:
+#   j             -- fzf pick a repo and cd into it
+#   j --reindex   -- rebuild the cache
+#   j <query>     -- fzf with initial query
+
+# -------------------------------------------------------------------
+# Config
+# -------------------------------------------------------------------
+CACHE_FILE="$HOME/.cache/j_repos.txt"
+SCAN_ROOTS=(
+  "$HOME/dev"
+  "$HOME/src"
+  "$HOME/code"
+  "$HOME/projects"
+  "$HOME/Documents"
+)
+SCAN_DEPTH=4
+
+# -------------------------------------------------------------------
+# Reindex
+# -------------------------------------------------------------------
+reindex() {
+  mkdir -p "$(dirname "$CACHE_FILE")"
+  echo "==> Scanning for repos..." >&2
+  : > "$CACHE_FILE"
+  for root in "${SCAN_ROOTS[@]}"; do
+    if [[ -d "$root" ]]; then
+      find "$root" -maxdepth "$SCAN_DEPTH" -name ".git" -type d 2>/dev/null \
+        | sed 's|/\.git$||' \
+        >> "$CACHE_FILE"
+    fi
+  done
+  local count
+  count="$(wc -l < "$CACHE_FILE" | tr -d ' ')"
+  echo "==> Indexed $count repos -> $CACHE_FILE" >&2
+}
+
+# -------------------------------------------------------------------
+# Main
+# -------------------------------------------------------------------
+if [[ "${1:-}" == "--reindex" ]]; then
+  reindex
+  exit 0
+fi
+
+# Auto-index if cache missing or empty
+if [[ ! -s "$CACHE_FILE" ]]; then
+  reindex
+fi
+
+QUERY="${1:-}"
+
+SELECTED="$(cat "$CACHE_FILE" | fzf --prompt='repo> ' --query="$QUERY")"
+
+if [[ -z "$SELECTED" ]]; then
+  exit 0
+fi
+
+# cd requires exec of a new shell in the selected directory
+echo "$SELECTED"
+cd "$SELECTED" && exec "$SHELL" -l

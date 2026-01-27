@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# install-guardrails -- set up pre-commit and pre-push hooks
+# Run from the dotfiles repo or any repo you want to protect.
+
+DOTFILES="$HOME/.dotfiles"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+HOOKS_DIR="$REPO_ROOT/.githooks"
+
+echo "==> Installing guardrails for: $REPO_ROOT"
+
+# -------------------------------------------------------------------
+# Create hooks directory
+# -------------------------------------------------------------------
+mkdir -p "$HOOKS_DIR"
+
+# -------------------------------------------------------------------
+# Pre-commit hook
+# -------------------------------------------------------------------
+cat > "$HOOKS_DIR/pre-commit" << 'HOOK'
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "==> Pre-commit guardrails"
+
+DOTFILES="$HOME/.dotfiles"
+GITLEAKS_CONFIG="$DOTFILES/guardrails/gitleaks.toml"
+
+# 1. gitleaks (if available)
+if command -v gitleaks &>/dev/null; then
+  echo "    Running gitleaks..."
+  if [[ -f "$GITLEAKS_CONFIG" ]]; then
+    gitleaks detect --no-git -v --redact --config "$GITLEAKS_CONFIG" --staged || {
+      echo "!!! gitleaks found potential secrets. Commit blocked."
+      exit 1
+    }
+  else
+    gitleaks detect --no-git -v --redact --staged || {
+      echo "!!! gitleaks found potential secrets. Commit blocked."
+      exit 1
+    }
+  fi
+else
+  echo "    gitleaks not found -- skipping (brew install gitleaks)"
+fi
+
+# 2. Pattern grep as fallback
+echo "    Checking common secret patterns..."
+STAGED_FILES="$(git diff --cached --name-only --diff-filter=ACM)"
+if [[ -n "$STAGED_FILES" ]]; then
+  PATTERNS=(
+    'AKIA[0-9A-Z]{16}'            # AWS access key
+    'sk-[a-zA-Z0-9]{20,}'         # OpenAI key
+    'ghp_[a-zA-Z0-9]{36}'         # GitHub personal token
+    'gho_[a-zA-Z0-9]{36}'         # GitHub OAuth token
+    'glpat-[a-zA-Z0-9\-]{20,}'    # GitLab token
+    'xoxb-[0-9]{10,}'             # Slack bot token
+    'xoxp-[0-9]{10,}'             # Slack user token
+  )
+  for pattern in "${PATTERNS[@]}"; do
+    if echo "$STAGED_FILES" | xargs grep -lPn "$pattern" 2>/dev/null; then
+      echo "!!! Potential secret detected (pattern: $pattern). Commit blocked."
+      exit 1
+    fi
+  done
+fi
+
+echo "    Guardrails passed."
+HOOK
+
+chmod +x "$HOOKS_DIR/pre-commit"
+
+# -------------------------------------------------------------------
+# Pre-push hook
+# -------------------------------------------------------------------
+cat > "$HOOKS_DIR/pre-push" << 'HOOK'
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "==> Pre-push guardrails"
+
+DOTFILES="$HOME/.dotfiles"
+GITLEAKS_CONFIG="$DOTFILES/guardrails/gitleaks.toml"
+
+if command -v gitleaks &>/dev/null; then
+  echo "    Running gitleaks on history..."
+  if [[ -f "$GITLEAKS_CONFIG" ]]; then
+    gitleaks detect -v --redact --config "$GITLEAKS_CONFIG" || {
+      echo "!!! gitleaks found secrets in history. Push blocked."
+      exit 1
+    }
+  else
+    gitleaks detect -v --redact || {
+      echo "!!! gitleaks found secrets in history. Push blocked."
+      exit 1
+    }
+  fi
+else
+  echo "    gitleaks not found -- skipping"
+fi
+
+echo "    Pre-push passed."
+HOOK
+
+chmod +x "$HOOKS_DIR/pre-push"
+
+# -------------------------------------------------------------------
+# Configure git to use hooks directory
+# -------------------------------------------------------------------
+git -C "$REPO_ROOT" config core.hooksPath .githooks
+echo "==> Hooks installed at $HOOKS_DIR"
+echo "==> git core.hooksPath set to .githooks"

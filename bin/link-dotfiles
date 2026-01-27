@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# link-dotfiles -- idempotent symlink manager
+# Backs up existing files before replacing them.
+# Safe to run repeatedly.
+
+DOTFILES="$HOME/.dotfiles"
+BACKUP_SUFFIX=".backup.$(date +%Y%m%d%H%M%S)"
+
+link() {
+  local src="$1"
+  local dst="$2"
+
+  if [[ -L "$dst" ]]; then
+    local current
+    current="$(readlink "$dst")"
+    if [[ "$current" == "$src" ]]; then
+      echo "  ok  $dst -> $src"
+      return
+    fi
+    echo "  fix $dst (was -> $current)"
+    rm "$dst"
+  elif [[ -e "$dst" ]]; then
+    echo "  bak $dst -> ${dst}${BACKUP_SUFFIX}"
+    mv "$dst" "${dst}${BACKUP_SUFFIX}"
+  fi
+
+  ln -s "$src" "$dst"
+  echo "  new $dst -> $src"
+}
+
+echo "==> Linking dotfiles"
+
+# Core configs
+link "$DOTFILES/zsh/zshrc"       "$HOME/.zshrc"
+link "$DOTFILES/tmux/tmux.conf"  "$HOME/.tmux.conf"
+link "$DOTFILES/git/gitconfig"   "$HOME/.gitconfig"
+
+# Neovim config directory
+mkdir -p "$HOME/.config"
+link "$DOTFILES/nvim" "$HOME/.config/nvim"
+
+# Scripts into ~/bin
+mkdir -p "$HOME/bin"
+for script in "$DOTFILES/bin/"*; do
+  name="$(basename "$script")"
+  # Skip linking link-dotfiles itself to avoid confusion
+  [[ "$name" == "link-dotfiles" ]] && continue
+  [[ "$name" == "install-guardrails" ]] && continue
+  link "$script" "$HOME/bin/$name"
+done
+
+echo "==> Done"

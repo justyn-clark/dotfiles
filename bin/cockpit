@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# cockpit -- interactive repo action menu
+# Usage: cockpit [action]
+
+# -------------------------------------------------------------------
+# Repo root
+# -------------------------------------------------------------------
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$REPO_ROOT"
+
+# -------------------------------------------------------------------
+# Stack detection
+# -------------------------------------------------------------------
+detect_stack() {
+  if [[ -f "package.json" ]]; then
+    echo "node"
+  elif [[ -f "go.mod" ]]; then
+    echo "go"
+  elif [[ -f "pyproject.toml" || -f "requirements.txt" || -f "uv.lock" ]]; then
+    echo "python"
+  else
+    echo "generic"
+  fi
+}
+
+STACK="$(detect_stack)"
+
+# -------------------------------------------------------------------
+# Package manager (node)
+# -------------------------------------------------------------------
+detect_pm() {
+  if [[ -f "bun.lockb" || -f "bun.lock" ]]; then
+    echo "bun"
+  elif [[ -f "pnpm-lock.yaml" ]]; then
+    echo "pnpm"
+  elif [[ -f "package-lock.json" ]]; then
+    echo "npm"
+  elif [[ -f "yarn.lock" ]]; then
+    echo "yarn"
+  else
+    echo "npm"
+  fi
+}
+
+PM="$(detect_pm)"
+
+# -------------------------------------------------------------------
+# Per-repo config: .cockpit.yml
+# -------------------------------------------------------------------
+CUSTOM_CONFIG="$REPO_ROOT/.cockpit.yml"
+
+get_custom_cmd() {
+  local action="$1"
+  if [[ -f "$CUSTOM_CONFIG" ]] && command -v yq &>/dev/null; then
+    local cmd
+    cmd="$(yq ".commands.\"$action\" // \"\"" "$CUSTOM_CONFIG" 2>/dev/null)"
+    if [[ -n "$cmd" && "$cmd" != "null" ]]; then
+      echo "$cmd"
+      return
+    fi
+  fi
+  echo ""
+}
+
+# -------------------------------------------------------------------
+# Command mapping
+# -------------------------------------------------------------------
+get_cmd() {
+  local action="$1"
+
+  # Check per-repo override first
+  local custom
+  custom="$(get_custom_cmd "$action")"
+  if [[ -n "$custom" ]]; then
+    echo "$custom"
+    return
+  fi
+
+  case "$STACK" in
+    node)
+      case "$action" in
+        dev)          echo "$PM run dev" ;;
+        test)         echo "$PM run test" ;;
+        lint)         echo "$PM run lint" ;;
+        typecheck)    echo "$PM run typecheck" ;;
+        build)        echo "$PM run build" ;;
+        format)       echo "$PM run format" ;;
+        db:migrate)   echo "$PM run db:migrate" ;;
+        db:seed)      echo "$PM run db:seed" ;;
+        git:status)   echo "git status -sb" ;;
+        git:diff)     echo "git diff" ;;
+        git:log)      echo "git log --oneline --graph -20" ;;
+        docker:up)    echo "docker compose up -d" ;;
+        docker:down)  echo "docker compose down" ;;
+        *)            echo "echo 'Unknown action: $action'" ;;
+      esac
+      ;;
+    go)
+      case "$action" in
+        dev)          echo "go run ." ;;
+        test)         echo "go test ./..." ;;
+        lint)         echo "golangci-lint run" ;;
+        typecheck)    echo "go vet ./..." ;;
+        build)        echo "go build ./..." ;;
+        format)       echo "gofmt -w ." ;;
+        git:status)   echo "git status -sb" ;;
+        git:diff)     echo "git diff" ;;
+        git:log)      echo "git log --oneline --graph -20" ;;
+        docker:up)    echo "docker compose up -d" ;;
+        docker:down)  echo "docker compose down" ;;
+        *)            echo "echo 'Unknown action: $action'" ;;
+      esac
+      ;;
+    python)
+      case "$action" in
+        dev)          echo "python -m uvicorn main:app --reload" ;;
+        test)         echo "pytest" ;;
+        lint)         echo "ruff check ." ;;
+        typecheck)    echo "mypy ." ;;
+        build)        echo "python -m build" ;;
+        format)       echo "ruff format ." ;;
+        git:status)   echo "git status -sb" ;;
+        git:diff)     echo "git diff" ;;
+        git:log)      echo "git log --oneline --graph -20" ;;
+        docker:up)    echo "docker compose up -d" ;;
+        docker:down)  echo "docker compose down" ;;
+        *)            echo "echo 'Unknown action: $action'" ;;
+      esac
+      ;;
+    *)
+      case "$action" in
+        dev)          echo "echo 'No dev command configured'" ;;
+        test)         echo "echo 'No test command configured'" ;;
+        git:status)   echo "git status -sb" ;;
+        git:diff)     echo "git diff" ;;
+        git:log)      echo "git log --oneline --graph -20" ;;
+        docker:up)    echo "docker compose up -d" ;;
+        docker:down)  echo "docker compose down" ;;
+        *)            echo "echo 'Unknown action: $action'" ;;
+      esac
+      ;;
+  esac
+}
+
+# -------------------------------------------------------------------
+# Actions menu
+# -------------------------------------------------------------------
+ACTIONS=(
+  dev
+  test
+  lint
+  typecheck
+  build
+  format
+  db:migrate
+  db:seed
+  git:status
+  git:diff
+  git:log
+  docker:up
+  docker:down
+)
+
+# -------------------------------------------------------------------
+# Select action
+# -------------------------------------------------------------------
+if [[ -n "${1:-}" ]]; then
+  ACTION="$1"
+else
+  ACTION="$(printf '%s\n' "${ACTIONS[@]}" | fzf --prompt="[$STACK] action> ")"
+fi
+
+CMD="$(get_cmd "$ACTION")"
+
+echo "==> [$STACK] $ACTION"
+echo "    $CMD"
+echo ""
+eval "$CMD"

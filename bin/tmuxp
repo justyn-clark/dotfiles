@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# tmuxp -- create tmux sessions from templates or per-repo config
+# Usage:
+#   tmuxp <template>       -- use built-in template
+#   echo template | tmuxp  -- read template from stdin
+#   tmuxp                  -- interactive fzf picker
+
+# -------------------------------------------------------------------
+# Determine repo root and session name
+# -------------------------------------------------------------------
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+SESSION_NAME="$(basename "$REPO_ROOT")"
+
+# -------------------------------------------------------------------
+# Per-repo config: .tmuxp.yml
+# -------------------------------------------------------------------
+CUSTOM_CONFIG="$REPO_ROOT/.tmuxp.yml"
+if [[ -f "$CUSTOM_CONFIG" ]]; then
+  echo "==> Using $CUSTOM_CONFIG"
+
+  # Create or attach session
+  if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+    tmux new-session -d -s "$SESSION_NAME" -c "$REPO_ROOT"
+
+    # Parse windows from .tmuxp.yml using yq
+    WINDOW_COUNT="$(yq '.windows | length' "$CUSTOM_CONFIG")"
+    for ((i = 0; i < WINDOW_COUNT; i++)); do
+      WNAME="$(yq ".windows[$i].name" "$CUSTOM_CONFIG")"
+      WCMD="$(yq ".windows[$i].cmd // \"\"" "$CUSTOM_CONFIG")"
+
+      if [[ "$i" -eq 0 ]]; then
+        tmux rename-window -t "$SESSION_NAME:1" "$WNAME"
+        [[ -n "$WCMD" && "$WCMD" != "null" ]] && tmux send-keys -t "$SESSION_NAME:1" "$WCMD" C-m
+      else
+        tmux new-window -t "$SESSION_NAME" -n "$WNAME" -c "$REPO_ROOT"
+        [[ -n "$WCMD" && "$WCMD" != "null" ]] && tmux send-keys -t "$SESSION_NAME:$WNAME" "$WCMD" C-m
+      fi
+    done
+
+    # Select first window
+    tmux select-window -t "$SESSION_NAME:1"
+  fi
+
+  exec tmux attach-session -t "$SESSION_NAME"
+fi
+
+# -------------------------------------------------------------------
+# Get template
+# -------------------------------------------------------------------
+TEMPLATES="web api worker infra fullstack"
+
+if [[ -n "${1:-}" ]]; then
+  TEMPLATE="$1"
+elif [[ ! -t 0 ]]; then
+  read -r TEMPLATE
+else
+  TEMPLATE="$(echo "$TEMPLATES" | tr ' ' '\n' | fzf --prompt='template> ')"
+fi
+
+TEMPLATE="${TEMPLATE:-web}"
+
+# -------------------------------------------------------------------
+# Create session from template
+# -------------------------------------------------------------------
+create_window() {
+  local name="$1"
+  local cmd="${2:-}"
+  tmux new-window -t "$SESSION_NAME" -n "$name" -c "$REPO_ROOT"
+  [[ -n "$cmd" ]] && tmux send-keys -t "$SESSION_NAME:$name" "$cmd" C-m
+}
+
+if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+  # First window is always editor
+  tmux new-session -d -s "$SESSION_NAME" -n "editor" -c "$REPO_ROOT"
+  tmux send-keys -t "$SESSION_NAME:editor" "nvim" C-m
+
+  case "$TEMPLATE" in
+    web)
+      create_window "shell"
+      create_window "git" "git status -sb"
+      ;;
+    api)
+      create_window "shell"
+      create_window "server"
+      create_window "git" "git status -sb"
+      ;;
+    worker)
+      create_window "shell"
+      create_window "worker"
+      create_window "git" "git status -sb"
+      ;;
+    infra)
+      create_window "shell"
+      create_window "tf"
+      create_window "git" "git status -sb"
+      ;;
+    fullstack)
+      create_window "shell"
+      create_window "web"
+      create_window "api"
+      create_window "worker"
+      create_window "git" "git status -sb"
+      ;;
+    *)
+      echo "Unknown template: $TEMPLATE" >&2
+      exit 1
+      ;;
+  esac
+
+  tmux select-window -t "$SESSION_NAME:editor"
+fi
+
+exec tmux attach-session -t "$SESSION_NAME"

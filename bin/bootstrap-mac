@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# bootstrap-mac -- set up a fresh macOS dev environment
+# Idempotent: safe to run multiple times.
+
+DOTFILES="$HOME/.dotfiles"
+
+echo "==> bootstrap-mac"
+
+# -------------------------------------------------------------------
+# 1. Xcode Command Line Tools
+# -------------------------------------------------------------------
+if ! xcode-select -p &>/dev/null; then
+  echo "==> Installing Xcode Command Line Tools..."
+  xcode-select --install || true
+  echo "    Waiting for install to complete. Re-run this script after."
+  exit 0
+else
+  echo "==> Xcode CLT: ok"
+fi
+
+# -------------------------------------------------------------------
+# 2. Homebrew
+# -------------------------------------------------------------------
+if ! command -v brew &>/dev/null; then
+  echo "==> Installing Homebrew..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+else
+  echo "==> Homebrew: ok"
+fi
+
+# -------------------------------------------------------------------
+# 3. Brew packages
+# -------------------------------------------------------------------
+PACKAGES=(
+  git
+  neovim
+  tmux
+  fzf
+  bat
+  eza
+  ripgrep
+  fd
+  jq
+  yq
+  git-delta
+  tldr
+  thefuck
+  direnv
+  gitleaks
+  hyperfine
+  dust
+  procs
+  python
+  delve
+)
+
+echo "==> Installing brew packages..."
+for pkg in "${PACKAGES[@]}"; do
+  if brew list "$pkg" &>/dev/null; then
+    echo "    $pkg: ok"
+  else
+    echo "    $pkg: installing..."
+    brew install "$pkg"
+  fi
+done
+
+# -------------------------------------------------------------------
+# 4. TPM (Tmux Plugin Manager)
+# -------------------------------------------------------------------
+TPM_DIR="$HOME/.tmux/plugins/tpm"
+if [[ ! -d "$TPM_DIR" ]]; then
+  echo "==> Installing TPM..."
+  git clone https://github.com/tmux-plugins/tpm "$TPM_DIR"
+else
+  echo "==> TPM: ok"
+fi
+
+# -------------------------------------------------------------------
+# 5. fzf shell integration
+# -------------------------------------------------------------------
+echo "==> Configuring fzf..."
+if [[ -x "$(brew --prefix)/opt/fzf/install" ]]; then
+  "$(brew --prefix)/opt/fzf/install" --all --no-bash --no-fish 2>/dev/null || true
+fi
+
+# -------------------------------------------------------------------
+# 6. debugpy for Python DAP
+# -------------------------------------------------------------------
+echo "==> Installing debugpy..."
+python3 -m pip install --user debugpy 2>/dev/null || \
+  python3 -m pip install --break-system-packages debugpy 2>/dev/null || \
+  echo "    debugpy: skipped (install manually: pip install debugpy)"
+
+# -------------------------------------------------------------------
+# 7. Link dotfiles
+# -------------------------------------------------------------------
+echo "==> Running link-dotfiles..."
+bash "$DOTFILES/bin/link-dotfiles"
+
+# -------------------------------------------------------------------
+# 8. Install guardrails
+# -------------------------------------------------------------------
+echo "==> Running install-guardrails..."
+bash "$DOTFILES/bin/install-guardrails"
+
+# -------------------------------------------------------------------
+# Done
+# -------------------------------------------------------------------
+echo ""
+echo "==> Bootstrap complete!"
+echo ""
+echo "Next steps:"
+echo "  1. Restart your terminal (or run: exec zsh)"
+echo "  2. Start tmux and press Ctrl-a I to install plugins"
+echo "  3. Run 'j --reindex' to build the repo jump cache"
+echo "  4. Run 'tldr --update' for offline tldr pages"

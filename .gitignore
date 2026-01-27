@@ -1,0 +1,36 @@
+# Secrets and env files
+.env
+.env.*
+.envrc.local
+*.key
+*.pem
+*.p12
+*.pfx
+**/secrets
+**/tokens
+**/credentials
+
+# Per-repo local overrides
+.cockpit.local.yml
+
+# macOS
+.DS_Store
+._*
+
+# Editor
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Node (if any scripts use it)
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+
+# Build artifacts
+*.o
+*.a

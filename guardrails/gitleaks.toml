@@ -1,0 +1,29 @@
+# gitleaks.toml -- minimal config for dotfiles repo
+# Uses the built-in rules from gitleaks plus custom additions.
+# See https://github.com/gitleaks/gitleaks for full docs.
+
+title = "dotfiles gitleaks config"
+
+[allowlist]
+  description = "Global allowlist"
+  paths = [
+    '''gitleaks\.toml''',
+    '''secrets-allowlist\.txt''',
+    '''README\.md''',
+  ]
+  # Add regexes for known false positives:
+  # regexTarget = "match"
+  # regexes = [
+  #   '''example-fake-key-[0-9]+''',
+  # ]
+
+# If you need to allowlist specific commits:
+# [allowlist]
+#   commits = ["abc123..."]
+
+# Additional custom rules (extend built-in set)
+# [[rules]]
+#   id = "custom-internal-token"
+#   description = "Internal service token"
+#   regex = '''INTERNAL_TOKEN_[A-Z0-9]{32}'''
+#   tags = ["token", "internal"]
