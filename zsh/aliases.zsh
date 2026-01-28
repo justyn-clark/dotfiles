@@ -36,6 +36,14 @@ alias k3000='kill -9 $(lsof -ti :3000) 2>/dev/null && echo "killed" || echo "not
 alias c='cockpit'
 alias jj='j'
 
+# tmux config
+alias tmuxconf='nvim ~/.tmux.conf'
+alias tmuxconfw='tmux new-window -n tmuxconf "nvim ~/.tmux.conf"'
+
+# dotfiles
+alias dots='cd ~/.dotfiles'
+alias dotsv='nvim ~/.dotfiles'
+
 # misc
 alias reload='exec zsh'
 alias path='echo $PATH | tr ":" "\n"'

@@ -261,6 +261,21 @@ Create `.envrc.example` files (without real values) to document required vars.
 Add paths to `guardrails/secrets-allowlist.txt` or regex patterns to
 `guardrails/gitleaks.toml` under `[allowlist]`.
 
+## Copying text in tmux
+
+Both mouse selection and tmux copy mode copy directly to the macOS clipboard.
+
+**Mouse selection**: Click and drag to select text, release to copy. Paste anywhere with Cmd-V.
+
+**tmux copy mode**:
+
+1. `Ctrl-a [` - enter copy mode
+2. `v` - start selection
+3. `y` - yank to clipboard and exit copy mode
+4. Paste with Cmd-V (any app) or `Ctrl-a ]` (inside tmux)
+
+**Note**: iTerm may show a banner about mouse reporting when entering/exiting tmux. This is expected behavior with tmux mouse mode enabled and can be safely ignored. To silence it, go to iTerm Preferences > Advanced > search "mouse reporting" and disable the banner.
+
 ## Customization
 
 - **Shell**: Edit files in `zsh/` and re-source (`reload` alias)
@@ -268,6 +283,18 @@ Add paths to `guardrails/secrets-allowlist.txt` or regex patterns to
 - **Git**: Edit `git/gitconfig`
 - **Neovim**: Edit files in `nvim/` and `nvim/lua/`
 - **Jump dirs**: Edit `SCAN_ROOTS` in `bin/j`
+
+**Quick access to tmux config**:
+
+- `tmuxconf` - open tmux config in nvim
+- `tmuxconfw` - open in a new tmux window
+- `Ctrl-a e` - open in a new tmux window (from within tmux)
+- `Ctrl-a r` - reload config after editing
+
+**Quick access to dotfiles**:
+
+- `dots` - cd to ~/.dotfiles
+- `dotsv` - open dotfiles in nvim
 
 ## License
 
