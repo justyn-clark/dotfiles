@@ -129,5 +129,12 @@ export NODE_OPTIONS="--dns-result-order=ipv4first"
 # fzf (from installer)
 [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 
+# Docker CLI completions
+if [[ -d "$HOME/.docker/completions" ]]; then
+  fpath=("$HOME/.docker/completions" $fpath)
+  autoload -Uz compinit
+  compinit
+fi
+
 # Powerlevel10k config (run p10k configure to customize)
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
