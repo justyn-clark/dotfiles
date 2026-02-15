@@ -153,3 +153,6 @@ fi
 
 # Powerlevel10k config (run p10k configure to customize)
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+
+# opencode
+export PATH=/Users/justin/.opencode/bin:$PATH
