@@ -24,6 +24,23 @@ fi
 # PATH
 export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 
+# ---- deterministic homebrew + completion init ----
+
+# Ensure Homebrew environment exists
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+else
+  export HOMEBREW_PREFIX="/opt/homebrew"
+  export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
+fi
+
+# Ensure brew completions visible
+fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
+
+# Initialize completion system exactly once
+autoload -Uz compinit
+compinit
+
 # History
 HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
 HISTSIZE=50000
@@ -129,11 +146,9 @@ export NODE_OPTIONS="--dns-result-order=ipv4first"
 # fzf (from installer)
 [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 
-# Docker CLI completions
+# Docker CLI completions (optional)
 if [[ -d "$HOME/.docker/completions" ]]; then
   fpath=("$HOME/.docker/completions" $fpath)
-  autoload -Uz compinit
-  compinit
 fi
 
 # Powerlevel10k config (run p10k configure to customize)
