@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# unlink-dotfiles -- safe unlink + backup restore for managed dotfile targets
+# Idempotent and non-destructive: only removes symlinks that point into ~/.dotfiles.
+
+DOTFILES="$HOME/.dotfiles"
+
+managed_targets=(
+  "$HOME/.zshrc"
+  "$HOME/.tmux.conf"
+  "$HOME/.gitconfig"
+  "$HOME/.config/nvim"
+  "$HOME/bin/cockpit"
+  "$HOME/bin/dev"
+  "$HOME/bin/j"
+  "$HOME/bin/tmuxp"
+)
+
+ensure_parent_dir() {
+  local target="$1"
+  local parent
+  parent="$(dirname "$target")"
+  mkdir -p "$parent"
+}
+
+newest_backup_for_target() {
+  local target="$1"
+  local latest=""
+  local candidate
+
+  shopt -s nullglob
+  for candidate in "${target}.backup."*; do
+    latest="$candidate"
+  done
+  shopt -u nullglob
+
+  if [[ -n "$latest" ]]; then
+    printf '%s\n' "$latest"
+  fi
+}
+
+echo "==> Unlinking dotfiles"
+
+for target in "${managed_targets[@]}"; do
+  removed_link=0
+
+  if [[ -L "$target" ]]; then
+    current="$(readlink "$target")"
+    if [[ "$current" == "$DOTFILES/"* ]]; then
+      rm "$target"
+      removed_link=1
+      echo "  rm      $target"
+    else
+      echo "  skip    $target (symlink not managed: $current)"
+    fi
+  elif [[ -e "$target" ]]; then
+    echo "  skip    $target (not a symlink)"
+  else
+    echo "  skip    $target (missing)"
+  fi
+
+  latest_backup="$(newest_backup_for_target "$target" || true)"
+  if [[ ! -e "$target" && -n "${latest_backup:-}" ]]; then
+    ensure_parent_dir "$target"
+    mv "$latest_backup" "$target"
+    echo "  restore $target <= $latest_backup"
+  elif [[ "$removed_link" -eq 1 ]]; then
+    echo "  skip    $target (no backup found)"
+  fi
+done
+
+echo "==> Done"

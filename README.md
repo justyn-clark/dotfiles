@@ -41,6 +41,26 @@ ln -s /path/to/your/dotfiles ~/.dotfiles
 
 After bootstrap, all tools and commands are globally available via `~/bin`.
 
+### Non-admin user safe install
+
+If you do not want to install packages or need a non-admin-safe setup, only link configs:
+
+```bash
+git clone https://github.com/YOUR_USER/dotfiles.git ~/.dotfiles
+~/.dotfiles/bin/link-dotfiles
+exec zsh
+```
+
+This does not require `sudo` and does not run Homebrew installs.
+
+### Uninstall (unlink + restore backups)
+
+```bash
+~/.dotfiles/bin/unlink-dotfiles
+```
+
+This removes managed symlinks that point into `~/.dotfiles` and restores the newest `*.backup.<timestamp>` files when present.
+
 ## What happens to my existing shell config?
 
 **bootstrap-mac does not destroy your existing setup.** It merges with it.
@@ -129,6 +149,7 @@ See [Per-repo configuration](#per-repo-configuration) below.
   bin/
     bootstrap-mac      # Full Mac setup
     link-dotfiles      # Idempotent symlink manager
+    unlink-dotfiles    # Remove managed symlinks + restore latest backups
     install-guardrails # Git hooks installer
     dev                # Auto-detect project, launch tmux session
     tmuxp              # Tmux session templates
@@ -159,6 +180,7 @@ See [Per-repo configuration](#per-repo-configuration) below.
 
 | Command | What it does |
 |---|---|
+| `unlink-dotfiles` | Remove managed symlinks to `~/.dotfiles` and restore latest backups |
 | `dev` | Auto-detect project type, launch tmux session with right windows |
 | `dev /path/to/repo` | Same, but for a specific path |
 | `tmuxp api` | Launch tmux with a named template (web, api, worker, infra, fullstack) |
@@ -295,6 +317,12 @@ Both mouse selection and tmux copy mode copy directly to the macOS clipboard.
 
 - `dots` - cd to ~/.dotfiles
 - `dotsv` - open dotfiles in nvim
+
+## Portability
+
+- No hardcoded user-home absolute paths are used; user-local paths resolve from `$HOME`.
+- Homebrew initialization is conditional on `brew` being present.
+- zsh completion initialization is non-interactive (`compinit -i`) and strips legacy Intel completion dirs early.
 
 ## License
 

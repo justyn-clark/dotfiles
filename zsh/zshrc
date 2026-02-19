@@ -24,14 +24,33 @@ fi
 # PATH
 export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 
+# Path helpers (portable, avoid duplicate/nonexistent entries)
+path_prepend_if_dir() {
+  local dir="$1"
+  [[ -d "$dir" ]] || return 0
+  case ":$PATH:" in
+    *":$dir:"*) ;;
+    *) export PATH="$dir:$PATH" ;;
+  esac
+}
+
+path_append_if_dir() {
+  local dir="$1"
+  [[ -d "$dir" ]] || return 0
+  case ":$PATH:" in
+    *":$dir:"*) ;;
+    *) export PATH="$PATH:$dir" ;;
+  esac
+}
+
 # Strip legacy Intel Homebrew dirs (portable across Apple Silicon machines)
 fpath=(${fpath:#/usr/local/share/zsh/site-functions})
 fpath=(${fpath:#/usr/local/share/zsh})
 
 # Homebrew (portable, no fake fallback)
-if [[ -x /opt/homebrew/bin/brew ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-  fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
+if command -v brew >/dev/null 2>&1; then
+  eval "$(brew shellenv)"
+  fpath=("$HOMEBREW_PREFIX/share/zsh/site-functions" $fpath)
 fi
 
 # Completion init (non-interactive, portable)
@@ -65,10 +84,10 @@ export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
 
 # fzf keybindings and completion
-if [[ -f "$HOMEBREW_PREFIX/opt/fzf/shell/completion.zsh" ]]; then
+if [[ -n "${HOMEBREW_PREFIX:-}" && -f "$HOMEBREW_PREFIX/opt/fzf/shell/completion.zsh" ]]; then
   source "$HOMEBREW_PREFIX/opt/fzf/shell/completion.zsh"
 fi
-if [[ -f "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh" ]]; then
+if [[ -n "${HOMEBREW_PREFIX:-}" && -f "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh" ]]; then
   source "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh"
 fi
 
@@ -95,24 +114,22 @@ export NVM_DIR="$HOME/.nvm"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
+path_prepend_if_dir "$BUN_INSTALL/bin"
 [[ -s "$HOME/.bun/_bun" ]] && source "$HOME/.bun/_bun"
 
 # pnpm
 export PNPM_HOME="$HOME/Library/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
+path_prepend_if_dir "$PNPM_HOME"
 
 # yarn
-export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+path_prepend_if_dir "$HOME/.config/yarn/global/node_modules/.bin"
+path_prepend_if_dir "$HOME/.yarn/bin"
 
 # deno
 [[ -f "$HOME/.deno/env" ]] && source "$HOME/.deno/env"
 
 # cargo/rust
-export PATH="$HOME/.cargo/bin:$PATH"
+path_prepend_if_dir "$HOME/.cargo/bin"
 
 # mise (polyglot version manager)
 if [[ -x "$HOME/.local/bin/mise" ]]; then
@@ -127,14 +144,18 @@ elif [[ -d "$HOME/miniconda3" ]]; then
 fi
 
 # postgresql (keg-only)
-[[ -d "/opt/homebrew/opt/postgresql@18/bin" ]] && export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"
+if [[ -n "${HOMEBREW_PREFIX:-}" ]]; then
+  path_prepend_if_dir "$HOMEBREW_PREFIX/opt/postgresql@18/bin"
+fi
 
 # terraform completions
 autoload -U +X bashcompinit && bashcompinit
-[[ -x /opt/homebrew/bin/terraform ]] && complete -o nospace -C /opt/homebrew/bin/terraform terraform
+if command -v terraform >/dev/null 2>&1; then
+  complete -o nospace -C "$(command -v terraform)" terraform
+fi
 
 # LM Studio CLI
-[[ -d "$HOME/.lmstudio/bin" ]] && export PATH="$PATH:$HOME/.lmstudio/bin"
+path_append_if_dir "$HOME/.lmstudio/bin"
 
 # opencode (user-local)
 [[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH"
