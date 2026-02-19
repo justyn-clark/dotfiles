@@ -24,22 +24,20 @@ fi
 # PATH
 export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 
-# ---- deterministic homebrew + completion init ----
+# Strip legacy Intel Homebrew dirs (portable across Apple Silicon machines)
+fpath=(${fpath:#/usr/local/share/zsh/site-functions})
+fpath=(${fpath:#/usr/local/share/zsh})
 
-# Ensure Homebrew environment exists
+# Homebrew (portable, no fake fallback)
 if [[ -x /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
-else
-  export HOMEBREW_PREFIX="/opt/homebrew"
-  export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
+  fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
 fi
 
-# Ensure brew completions visible
-fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
-
-# Initialize completion system exactly once
+# Completion init (non-interactive, portable)
+ZSH_DISABLE_COMPFIX=true
 autoload -Uz compinit
-compinit
+compinit -i
 
 # History
 HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
@@ -138,7 +136,7 @@ autoload -U +X bashcompinit && bashcompinit
 # LM Studio CLI
 [[ -d "$HOME/.lmstudio/bin" ]] && export PATH="$PATH:$HOME/.lmstudio/bin"
 
-# opencode
+# opencode (user-local)
 [[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH"
 
 export NODE_OPTIONS="--dns-result-order=ipv4first"
@@ -153,6 +151,3 @@ fi
 
 # Powerlevel10k config (run p10k configure to customize)
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
-
-# opencode
-export PATH=/Users/justin/.opencode/bin:$PATH
