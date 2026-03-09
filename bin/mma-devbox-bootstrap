@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$HOME/.dotfiles/bin/_mma-common.sh"
+
+mma_require_repo
+root="$(mma_repo)"
+install=0
+arg="${1:-}"
+if [[ "$arg" == "--install" ]]; then
+  install=1
+  shift
+  arg="${1:-}"
+fi
+if [[ -n "$arg" ]]; then
+  target="$(mma_set_target "$arg")"
+else
+  target="$(mma_resolve_url)"
+fi
+
+need_cmd() {
+  local cmd="$1"
+  local brew_pkg="$2"
+  if command -v "$cmd" >/dev/null 2>&1; then
+    printf 'ok   %-8s %s\n' "$cmd" "$(command -v "$cmd")"
+  else
+    printf 'miss %-8s\n' "$cmd"
+    if [[ $install -eq 1 ]]; then
+      brew install "$brew_pkg"
+    fi
+  fi
+}
+
+echo "==> mac-mini-agent devbox bootstrap"
+echo "repo:   $root"
+echo "target: $target"
+echo ""
+need_cmd uv uv
+need_cmd just just
+need_cmd curl curl
+
+echo "==> warming direct"
+(cd "$(mma_app_dir direct)" && uv run python main.py --help >/dev/null)
+
+echo ""
+if curl -sfm 3 "$target/jobs" >/dev/null 2>&1; then
+  echo "listen reachable: yes"
+else
+  echo "listen reachable: no"
+fi
+
+echo ""
+echo "Operator commands now available on PATH:"
+echo "- mma-target"
+echo "- direct"
+echo "- mma-status"

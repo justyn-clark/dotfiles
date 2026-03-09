@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$HOME/.dotfiles/bin/_mma-common.sh"
+
+mma_require_repo
+if [[ "${1:-}" == "--rebuild" ]]; then
+  shift
+  mma_build_steer
+elif mma_steer_needs_build; then
+  mma_build_steer
+fi
+
+exec "$(mma_steer_bin)" "$@"

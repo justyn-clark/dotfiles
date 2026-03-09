@@ -12,11 +12,13 @@ set -euo pipefail
 # -------------------------------------------------------------------
 CACHE_FILE="$HOME/.cache/j_repos.txt"
 SCAN_ROOTS=(
+  "$HOME/Agent/Projects"
   "$HOME/dev"
   "$HOME/src"
   "$HOME/code"
   "$HOME/projects"
   "$HOME/Documents"
+  "$HOME/.dotfiles"
 )
 SCAN_DEPTH=4
 

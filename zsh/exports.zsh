@@ -13,3 +13,6 @@ export VISUAL="nvim"
 # Go
 export GOPATH="$HOME/go"
 export PATH="$GOPATH/bin:$PATH"
+
+# mac-mini-agent
+export JCN_MAC_MINI_AGENT_ROOT="$HOME/Agent/Projects/reference/mac-mini-agent"

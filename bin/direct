@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$HOME/.dotfiles/bin/_mma-common.sh"
+
+mma_require_repo
+mma_ensure_cmd uv "brew install uv"
+cd "$(mma_app_dir direct)"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  direct start <prompt>
+  direct get <job_id>
+  direct list [--archived]
+  direct latest [n]
+  direct stop <job_id>
+  direct clear
+  direct --help
+
+The wrapper resolves the sandbox URL from:
+  1. AGENT_SANDBOX_URL
+  2. ~/.config/jcn/mac-mini-agent.env
+  3. http://127.0.0.1:7600
+
+Use `mma-target <host-or-url>` to set the default target.
+EOF
+}
+
+cmd="${1:-}"
+url="$(mma_resolve_url)"
+
+case "$cmd" in
+  ""|-h|--help|help)
+    usage
+    exit 0
+    ;;
+  start)
+    shift
+    [[ $# -ge 1 ]] || { echo "start requires a prompt" >&2; exit 1; }
+    prompt="$*"
+    exec uv run python main.py start "$url" "$prompt"
+    ;;
+  get)
+    shift
+    [[ $# -eq 1 ]] || { echo "get requires a job_id" >&2; exit 1; }
+    exec uv run python main.py get "$url" "$1"
+    ;;
+  list)
+    shift
+    exec uv run python main.py list "$url" "$@"
+    ;;
+  latest)
+    shift
+    if [[ $# -eq 0 ]]; then
+      exec uv run python main.py latest "$url" 1
+    fi
+    exec uv run python main.py latest "$url" "$1"
+    ;;
+  stop)
+    shift
+    [[ $# -eq 1 ]] || { echo "stop requires a job_id" >&2; exit 1; }
+    exec uv run python main.py stop "$url" "$1"
+    ;;
+  clear)
+    shift
+    exec uv run python main.py clear "$url"
+    ;;
+  *)
+    echo "unknown direct command: $cmd" >&2
+    usage >&2
+    exit 1
+    ;;
+esac

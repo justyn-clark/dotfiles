@@ -44,6 +44,17 @@ alias tmuxconfw='tmux new-window -n tmuxconf "nvim ~/.tmux.conf"'
 alias dots='cd ~/.dotfiles'
 alias dotsv='nvim ~/.dotfiles'
 
+# mac-mini-agent
+alias mma='cd ~/Agent/Projects/reference/mac-mini-agent'
+alias mmaapps='cd ~/Agent/Projects/reference/mac-mini-agent/apps'
+alias mmasteer='cd ~/Agent/Projects/reference/mac-mini-agent/apps/steer'
+alias mmadrive='cd ~/Agent/Projects/reference/mac-mini-agent/apps/drive'
+alias mmalisten='cd ~/Agent/Projects/reference/mac-mini-agent/apps/listen'
+alias mmadirect='cd ~/Agent/Projects/reference/mac-mini-agent/apps/direct'
+alias sandboxup='listen'
+alias sandboxjobs='direct list'
+alias sandboxlatest='direct latest'
+
 # misc
 alias reload='exec zsh'
 alias path='echo $PATH | tr ":" "\n"'

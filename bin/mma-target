@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$HOME/.dotfiles/bin/_mma-common.sh"
+
+case "${1:-}" in
+  ""|show)
+    echo "$(mma_resolve_url)"
+    ;;
+  clear)
+    rm -f "$(mma_config_file)"
+    echo "cleared; default is now $(mma_default_url)"
+    ;;
+  set)
+    [[ $# -eq 2 ]] || { echo "usage: mma-target set <host-or-url>" >&2; exit 1; }
+    echo "$(mma_set_target "$2")"
+    ;;
+  *)
+    echo "$(mma_set_target "$1")"
+    ;;
+esac

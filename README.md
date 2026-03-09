@@ -137,6 +137,22 @@ j                    # fzf picker across all your repos
 j myapp              # pre-filtered
 ```
 
+`j` now also indexes `~/Agent/Projects`, so JCN repos are first-class in the jump cache.
+
+### Mac Mini Agent integration
+
+The dotfiles can expose the `mac-mini-agent` reference repo as first-class shell tools:
+
+```bash
+steer --help
+mma-target 192.168.1.50
+mma-status
+direct list
+mma-sandbox-bootstrap
+```
+
+These wrappers resolve the repo from `JCN_MAC_MINI_AGENT_ROOT` and use `~/.config/jcn/mac-mini-agent.env` for the default sandbox URL.
+
 ### Optional: customize per repo
 
 Drop a `.cockpit.yml` or `.tmuxp.yml` in any repo root to override defaults.
@@ -189,6 +205,14 @@ See [Per-repo configuration](#per-repo-configuration) below.
 | `cockpit test` | Run a specific action directly |
 | `j` | Fuzzy-find and jump to any git repo |
 | `j --reindex` | Rebuild the repo cache |
+| `steer` | Build on demand if needed, then run the mac-mini-agent Swift GUI automation CLI |
+| `drive` | Run the mac-mini-agent tmux control CLI via `uv` |
+| `listen` | Run the mac-mini-agent FastAPI job server via `uv` |
+| `direct` | Talk to the configured sandbox URL without typing the URL every time |
+| `mma-target` | Show or set the default mac-mini-agent sandbox target |
+| `mma-status` | Show repo path, target URL, wrapper paths, and listen reachability |
+| `mma-sandbox-bootstrap` | Warm and verify the local sandbox-side mac-mini-agent toolchain |
+| `mma-devbox-bootstrap` | Warm and verify the devbox-side client flow and target URL |
 | `c` | Alias for `cockpit` |
 | `jj` | Alias for `j` |
 

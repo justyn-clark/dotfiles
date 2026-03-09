@@ -45,7 +45,8 @@ link "$DOTFILES/nvim" "$HOME/.config/nvim"
 mkdir -p "$HOME/bin"
 for script in "$DOTFILES/bin/"*; do
   name="$(basename "$script")"
-  # Skip linking link-dotfiles itself to avoid confusion
+  # Skip internal helpers and installer entrypoints
+  [[ "$name" == _* ]] && continue
   [[ "$name" == "link-dotfiles" ]] && continue
   [[ "$name" == "install-guardrails" ]] && continue
   link "$script" "$HOME/bin/$name"

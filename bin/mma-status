@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$HOME/.dotfiles/bin/_mma-common.sh"
+
+repo="$(mma_repo)"
+url="$(mma_resolve_url)"
+steer_bin="$(mma_steer_bin)"
+
+echo "mac-mini-agent status"
+echo "repo:   $repo"
+echo "target: $url"
+echo ""
+
+printf '%-10s %s\n' steer  "$(command -v steer 2>/dev/null || echo missing)"
+printf '%-10s %s\n' drive  "$(command -v drive 2>/dev/null || echo missing)"
+printf '%-10s %s\n' direct "$(command -v direct 2>/dev/null || echo missing)"
+printf '%-10s %s\n' listen "$(command -v listen 2>/dev/null || echo missing)"
+echo ""
+
+if [[ -x "$steer_bin" ]]; then
+  echo "steer-bin: $steer_bin"
+else
+  echo "steer-bin: missing"
+fi
+
+if curl -sfm 3 "$url/jobs" >/dev/null 2>&1; then
+  echo "listen: reachable"
+else
+  echo "listen: unreachable"
+fi

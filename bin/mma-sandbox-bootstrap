@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$HOME/.dotfiles/bin/_mma-common.sh"
+
+mma_require_repo
+root="$(mma_repo)"
+install=0
+[[ "${1:-}" == "--install" ]] && install=1
+
+need_cmd() {
+  local cmd="$1"
+  local brew_pkg="$2"
+  if command -v "$cmd" >/dev/null 2>&1; then
+    printf 'ok   %-8s %s\n' "$cmd" "$(command -v "$cmd")"
+  else
+    printf 'miss %-8s\n' "$cmd"
+    if [[ $install -eq 1 ]]; then
+      brew install "$brew_pkg"
+    fi
+  fi
+}
+
+echo "==> mac-mini-agent sandbox bootstrap"
+echo "repo: $root"
+echo ""
+need_cmd swift swift
+need_cmd tmux tmux
+need_cmd just just
+need_cmd uv uv
+need_cmd yq yq
+if command -v claude >/dev/null 2>&1; then
+  printf 'ok   %-8s %s\n' claude "$(command -v claude)"
+else
+  echo 'miss claude'
+fi
+
+echo ""
+mma_build_steer
+
+echo "==> warming drive"
+(cd "$(mma_app_dir drive)" && uv run python main.py --help >/dev/null)
+echo "==> warming listen"
+(cd "$(mma_app_dir listen)" && uv run python - <<'PY' >/dev/null
+import main
+print('ok')
+PY
+)
+echo "==> warming direct"
+(cd "$(mma_app_dir direct)" && uv run python main.py --help >/dev/null)
+
+echo ""
+echo "Permissions still required in System Settings for the terminal you use:" 
+echo "- Accessibility"
+echo "- Screen Recording"
+echo "- Full Disk Access"
+echo ""
+echo "Sandbox commands now available on PATH:"
+echo "- steer"
+echo "- drive"
+echo "- listen"
+echo "- direct"
+echo "- mma-status"

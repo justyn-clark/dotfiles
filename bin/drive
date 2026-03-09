@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$HOME/.dotfiles/bin/_mma-common.sh"
+
+mma_require_repo
+mma_ensure_cmd uv "brew install uv"
+cd "$(mma_app_dir drive)"
+exec uv run python main.py "$@"
