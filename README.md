@@ -150,6 +150,25 @@ j myapp              # pre-filtered
 
 `j` now also indexes `~/Agent/Projects`, so JCN repos are first-class in the jump cache.
 
+
+### JCN external env convention
+
+Real runtime env files should live outside repos under `~/.config/jcn/env/` and be loaded with helper commands:
+
+```bash
+jcn-env-file clientbrief
+jcn-env-edit clientbrief
+jcn-env-run clientbrief -- pnpm dev
+```
+
+Allowed in repos:
+- `.env.example`
+- `.env.sample`
+- `.env.template`
+
+Forbidden in repos:
+- real `.env` files with secrets
+
 ### Mac Mini Agent integration
 
 The dotfiles can expose the `mac-mini-agent` reference repo as first-class shell tools:

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+slug="${1:-}"
+if [[ -z "$slug" ]]; then
+  echo "usage: jcn-env-file <repo-slug>" >&2
+  exit 1
+fi
+home_dir="${JCN_ENV_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}/jcn/env}"
+printf '%s/%s.env\n' "$home_dir" "$slug"

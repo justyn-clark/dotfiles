@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+slug="${1:-}"
+if [[ -z "$slug" ]]; then
+  echo "usage: jcn-env-edit <repo-slug>" >&2
+  exit 1
+fi
+env_file="$($HOME/.dotfiles/bin/jcn-env-file "$slug")"
+mkdir -p "$(dirname "$env_file")"
+if [[ ! -f "$env_file" ]]; then
+  touch "$env_file"
+  chmod 600 "$env_file"
+fi
+exec "${EDITOR:-nvim}" "$env_file"

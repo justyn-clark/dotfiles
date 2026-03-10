@@ -55,6 +55,10 @@ alias sandboxup='listen'
 alias sandboxjobs='direct list'
 alias sandboxlatest='direct latest'
 
+# env
+alias jenv='jcn-env-edit'
+alias jenvpath='jcn-env-file'
+
 # misc
 alias reload='exec zsh'
 alias path='echo $PATH | tr ":" "\n"'

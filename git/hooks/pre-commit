@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+is_forbidden_env_path() {
+  local path="$1"
+  local base
+  base="$(basename "$path")"
+  case "$base" in
+    .env|.env.*|*.env)
+      case "$base" in
+        *.example|*.sample|*.template) return 1 ;;
+        .env.example|.env.sample|.env.template) return 1 ;;
+      esac
+      return 0
+      ;;
+    *) return 1 ;;
+  esac
+}
+
+bad=0
+while IFS= read -r path; do
+  [[ -z "$path" ]] && continue
+  if is_forbidden_env_path "$path"; then
+    echo "blocked: refusing to commit secret env file: $path" >&2
+    bad=1
+  fi
+done < <(git diff --cached --name-only --diff-filter=ACMRTUXB)
+
+if [[ "$bad" -ne 0 ]]; then
+  cat >&2 <<'MSG'
+Use external env files instead:
+  ~/.config/jcn/env/<repo>.env
+
+Allowed in repos:
+  .env.example
+  .env.sample
+  .env.template
+MSG
+  exit 1
+fi

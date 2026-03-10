@@ -34,3 +34,13 @@ __pycache__/
 # Build artifacts
 *.o
 *.a
+
+# JCN universal secrets policy
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+!.env.*.example
+!.env.*.sample
+!.env.*.template

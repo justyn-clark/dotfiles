@@ -8,7 +8,8 @@
 	editor = nvim
 	pager = delta
 	autocrlf = input
-	excludesFile = ~/.gitignore_global
+	excludesFile = ~/.dotfiles/git/ignore
+	hooksPath = ~/.dotfiles/git/hooks
 
 [interactive]
 	diffFilter = delta --color-only

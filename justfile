@@ -88,3 +88,11 @@ doctor:
       printf '%-10s' "$x"
       command -v "$x" || true
     done
+
+# Show the external env path for a repo slug
+env-path repo:
+	bash bin/jcn-env-file {{repo}}
+
+# Edit the external env file for a repo slug
+env-edit repo:
+	bash bin/jcn-env-edit {{repo}}

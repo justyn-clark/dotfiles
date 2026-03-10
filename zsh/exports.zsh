@@ -16,3 +16,6 @@ export PATH="$GOPATH/bin:$PATH"
 
 # mac-mini-agent
 export JCN_MAC_MINI_AGENT_ROOT="$HOME/Agent/Projects/reference/mac-mini-agent"
+
+# JCN env home
+export JCN_ENV_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/jcn/env"

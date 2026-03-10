@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+slug="${1:-}"
+shift || true
+if [[ -z "$slug" || "${1:-}" != "--" ]]; then
+  echo "usage: jcn-env-run <repo-slug> -- <command...>" >&2
+  exit 1
+fi
+shift
+env_file="${JCN_ENV_FILE:-$($HOME/.dotfiles/bin/jcn-env-file "$slug")}"
+if [[ ! -f "$env_file" ]]; then
+  echo "missing external env file: $env_file" >&2
+  exit 1
+fi
+set -a
+# shellcheck disable=SC1090
+source "$env_file"
+set +a
+exec "$@"
