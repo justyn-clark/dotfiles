@@ -8,7 +8,7 @@ A portable, terminal-first macOS development environment built for speed and rep
 - **Editor**: Neovim with minimal LSP (lua, typescript, python, go) and optional DAP
 - **Multiplexer**: tmux with Ctrl-a prefix, vim nav, session persistence (resurrect + continuum)
 - **Git**: delta side-by-side diffs, useful aliases, rerere
-- **Tools**: fzf, bat, eza, ripgrep, fd, jq, yq, tldr, hyperfine, dust, procs
+- **Tools**: fzf, bat, eza, ripgrep, fd, jq, yq, just, tldr, hyperfine, dust, procs
 - **Boss scripts**: `dev`, `tmuxp`, `cockpit`, `j`
 - **Guardrails**: gitleaks pre-commit/pre-push hooks, secret pattern detection
 
@@ -40,6 +40,17 @@ ln -s /path/to/your/dotfiles ~/.dotfiles
 ```
 
 After bootstrap, all tools and commands are globally available via `~/bin`.
+
+A top-level `justfile` is also available in `~/.dotfiles` for common operator workflows:
+
+```bash
+cd ~/.dotfiles
+just
+just bootstrap
+just link
+just reindex
+just mma-status
+```
 
 ### Non-admin user safe install
 
@@ -197,6 +208,7 @@ See [Per-repo configuration](#per-repo-configuration) below.
 | Command | What it does |
 |---|---|
 | `unlink-dotfiles` | Remove managed symlinks to `~/.dotfiles` and restore latest backups |
+| `just` | Run dotfiles-level operator recipes from `~/.dotfiles/justfile` |
 | `dev` | Auto-detect project type, launch tmux session with right windows |
 | `dev /path/to/repo` | Same, but for a specific path |
 | `tmuxp api` | Launch tmux with a named template (web, api, worker, infra, fullstack) |
