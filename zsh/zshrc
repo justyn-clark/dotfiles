@@ -34,10 +34,11 @@ elif [[ -x /usr/local/bin/brew ]]; then
 else
   path=(${path:#/usr/local/bin})
   path=(${path:#/usr/local/sbin})
-  path=(${path:#/usr/local/go/bin})
+  # path=(${path:#/usr/local/go/bin})  # keep Go in PATH
 fi
 
 export PATH="${(j.:.)path}"
+
 
 # Path helpers (portable, avoid duplicate/nonexistent entries)
 path_prepend_if_dir() {
@@ -118,6 +119,7 @@ fi
 # Source additional config
 source "$HOME/.dotfiles/zsh/exports.zsh"
 source "$HOME/.dotfiles/zsh/aliases.zsh"
+source "$HOME/.dotfiles/zsh/media.zsh"
 
 # --- Runtime toolchains ---
 
@@ -186,3 +188,17 @@ fi
 
 # Powerlevel10k config (run p10k configure to customize)
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+
+# OpenClaw Completion
+if [ -f "$HOME/.openclaw/completions/openclaw.zsh" ]; then
+  source "$HOME/.openclaw/completions/openclaw.zsh"
+fi
+
+# OpenClaw token (local secret; keep out of git)
+[[ -f "$HOME/.config/openclaw/token.zsh" ]] && source "$HOME/.config/openclaw/token.zsh"
+
+
+# Added by LM Studio CLI (lms)
+path_append_if_dir "$HOME/.lmstudio/bin"
+# End of LM Studio CLI section
+
