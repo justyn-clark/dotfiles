@@ -44,6 +44,9 @@ local function safe_require(mod)
   end
 end
 
+safe_require("plugins")
 safe_require("fzf")
 safe_require("lsp")
+safe_require("telescopecfg")
+safe_require("neotree")
 safe_require("dapcfg")
