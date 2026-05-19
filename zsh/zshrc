@@ -39,7 +39,6 @@ fi
 
 export PATH="${(j.:.)path}"
 
-
 # Path helpers (portable, avoid duplicate/nonexistent entries)
 path_prepend_if_dir() {
   local dir="$1"
@@ -59,19 +58,40 @@ path_append_if_dir() {
   esac
 }
 
+source_if_quickly_readable() {
+  local file="$1"
+  [[ -r "$file" ]] || return 0
+
+  if command -v perl >/dev/null 2>&1; then
+    perl -e 'alarm 1; open my $fh, "<", $ARGV[0] or exit 1; read $fh, my $buf, 1; exit 0' "$file" >/dev/null 2>&1 || return 0
+  fi
+
+  source "$file"
+}
+
 # Strip legacy Intel Homebrew dirs (portable across Apple Silicon machines)
 fpath=(${fpath:#/usr/local/share/zsh/site-functions})
 fpath=(${fpath:#/usr/local/share/zsh})
 
-# Homebrew completions from resolved prefix
+# Completion search path. Keep every fpath mutation before compinit so a fresh
+# dotfiles install gets the same populated completion set on every machine.
+fpath=("$HOME/.dotfiles/zsh/completions" $fpath)
 if [[ -n "${HOMEBREW_PREFIX:-}" ]]; then
   fpath=("$HOMEBREW_PREFIX/share/zsh/site-functions" $fpath)
 fi
+if [[ -d "$HOME/.docker/completions" ]]; then
+  fpath=("$HOME/.docker/completions" $fpath)
+fi
 
-# Completion init (non-interactive, portable)
+zstyle ':completion:*' menu select
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+
+# Completion init (non-interactive, portable). Use -u so Homebrew completions
+# still load on machines where Homebrew is owned by another local admin account.
 ZSH_DISABLE_COMPFIX=true
 autoload -Uz compinit
-compinit -i
+compinit -u
 
 # History
 HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
@@ -99,10 +119,10 @@ export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
 
 # fzf keybindings and completion
-if [[ -n "${HOMEBREW_PREFIX:-}" && -f "$HOMEBREW_PREFIX/opt/fzf/shell/completion.zsh" ]]; then
+if [[ -o interactive && -t 0 && -t 1 && -n "${HOMEBREW_PREFIX:-}" && -f "$HOMEBREW_PREFIX/opt/fzf/shell/completion.zsh" ]]; then
   source "$HOMEBREW_PREFIX/opt/fzf/shell/completion.zsh"
 fi
-if [[ -n "${HOMEBREW_PREFIX:-}" && -f "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh" ]]; then
+if [[ -o interactive && -t 0 && -t 1 && -n "${HOMEBREW_PREFIX:-}" && -f "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh" ]]; then
   source "$HOMEBREW_PREFIX/opt/fzf/shell/key-bindings.zsh"
 fi
 
@@ -179,26 +199,34 @@ path_append_if_dir "$HOME/.lmstudio/bin"
 export NODE_OPTIONS="--dns-result-order=ipv4first"
 
 # fzf (from installer)
-[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
-
-# Docker CLI completions (optional)
-if [[ -d "$HOME/.docker/completions" ]]; then
-  fpath=("$HOME/.docker/completions" $fpath)
-fi
+[[ -o interactive && -t 0 && -t 1 && -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 
 # Powerlevel10k config (run p10k configure to customize)
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
 
-# OpenClaw Completion
-if [ -f "$HOME/.openclaw/completions/openclaw.zsh" ]; then
+# OpenClaw completion
+if [[ -o interactive && -f "$HOME/.openclaw/completions/openclaw.zsh" ]]; then
   source "$HOME/.openclaw/completions/openclaw.zsh"
 fi
 
-# OpenClaw token (local secret; keep out of git)
-[[ -f "$HOME/.config/openclaw/token.zsh" ]] && source "$HOME/.config/openclaw/token.zsh"
-
+# OpenClaw gateway auth token is canonical in ~/.openclaw/openclaw.json.
+# Keep OPENCLAW_GATEWAY_TOKEN out of shell env to prevent gateway token mismatches.
+unset OPENCLAW_GATEWAY_TOKEN
 
 # Added by LM Studio CLI (lms)
 path_append_if_dir "$HOME/.lmstudio/bin"
 # End of LM Studio CLI section
 
+# Google Cloud SDK
+# Source helpers from common user-local install locations, without hardcoded
+# per-machine home paths.
+for gcloud_sdk in \
+  "$HOME/google-cloud-sdk" \
+  "$HOME/Downloads/google-cloud-sdk" \
+  "$HOME/Agent/Tools/google-cloud-sdk-local/google-cloud-sdk"
+do
+  path_prepend_if_dir "$gcloud_sdk/bin"
+  if [[ -o interactive && -r "$gcloud_sdk/completion.zsh.inc" ]]; then
+    source_if_quickly_readable "$gcloud_sdk/completion.zsh.inc"
+  fi
+done

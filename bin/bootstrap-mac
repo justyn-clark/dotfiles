@@ -39,6 +39,7 @@ PACKAGES=(
   neovim
   tmux
   fzf
+  zsh-completions
   bat
   eza
   ripgrep
@@ -68,7 +69,18 @@ for pkg in "${PACKAGES[@]}"; do
 done
 
 # -------------------------------------------------------------------
-# 4. TPM (Tmux Plugin Manager)
+# 4. Zinit plugin manager
+# -------------------------------------------------------------------
+ZINIT_DIR="$HOME/.zsh_plugins/zinit"
+if [[ ! -d "$ZINIT_DIR" ]]; then
+  echo "==> Installing Zinit..."
+  git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_DIR"
+else
+  echo "==> Zinit: ok"
+fi
+
+# -------------------------------------------------------------------
+# 5. TPM (Tmux Plugin Manager)
 # -------------------------------------------------------------------
 TPM_DIR="$HOME/.tmux/plugins/tpm"
 if [[ ! -d "$TPM_DIR" ]]; then
@@ -79,7 +91,7 @@ else
 fi
 
 # -------------------------------------------------------------------
-# 5. fzf shell integration
+# 6. fzf shell integration
 # -------------------------------------------------------------------
 echo "==> Configuring fzf..."
 if [[ -x "$(brew --prefix)/opt/fzf/install" ]]; then
@@ -87,7 +99,7 @@ if [[ -x "$(brew --prefix)/opt/fzf/install" ]]; then
 fi
 
 # -------------------------------------------------------------------
-# 6. debugpy for Python DAP
+# 7. debugpy for Python DAP
 # -------------------------------------------------------------------
 echo "==> Installing debugpy..."
 python3 -m pip install --user debugpy 2>/dev/null || \
@@ -95,13 +107,13 @@ python3 -m pip install --user debugpy 2>/dev/null || \
   echo "    debugpy: skipped (install manually: pip install debugpy)"
 
 # -------------------------------------------------------------------
-# 7. Link dotfiles
+# 8. Link dotfiles
 # -------------------------------------------------------------------
 echo "==> Running link-dotfiles..."
 bash "$DOTFILES/bin/link-dotfiles"
 
 # -------------------------------------------------------------------
-# 8. Install guardrails
+# 9. Install guardrails
 # -------------------------------------------------------------------
 echo "==> Running install-guardrails..."
 bash "$DOTFILES/bin/install-guardrails"

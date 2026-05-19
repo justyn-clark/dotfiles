@@ -8,6 +8,7 @@ DOTFILES="$HOME/.dotfiles"
 
 managed_targets=(
   "$HOME/.zshrc"
+  "$HOME/.p10k.zsh"
   "$HOME/.tmux.conf"
   "$HOME/.gitconfig"
   "$HOME/.config/nvim"

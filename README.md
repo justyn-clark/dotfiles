@@ -4,7 +4,7 @@ A portable, terminal-first macOS development environment built for speed and rep
 
 ## What's included
 
-- **Shell**: zsh with history, fzf integration, direnv, thefuck
+- **Shell**: zsh with Powerlevel10k, history, populated completions, fzf integration, direnv, thefuck
 - **Editor**: Neovim with minimal LSP (lua, typescript, python, go) and optional DAP
 - **Multiplexer**: tmux with Ctrl-a prefix, vim nav, session persistence (resurrect + continuum)
 - **Git**: delta side-by-side diffs, useful aliases, rerere
@@ -96,6 +96,7 @@ The symlink chain:
 
 ```
 ~/.zshrc  -->  ~/.dotfiles/zsh/zshrc
+~/.p10k.zsh --> ~/.dotfiles/p10k.zsh
                    sources ~/.dotfiles/zsh/exports.zsh
                    sources ~/.dotfiles/zsh/aliases.zsh
 ```
@@ -377,7 +378,8 @@ Both mouse selection and tmux copy mode copy directly to the macOS clipboard.
 
 - No hardcoded user-home absolute paths are used; user-local paths resolve from `$HOME`.
 - Homebrew initialization is conditional on `brew` being present.
-- zsh completion initialization is non-interactive (`compinit -i`) and strips legacy Intel completion dirs early.
+- zsh completion initialization is non-interactive (`compinit -u`), trusts local Homebrew completion dirs even when ownership differs by machine account, strips legacy Intel completion dirs early, and loads dotfiles, Homebrew, Docker, OpenClaw, fzf, bun, nvm, Google Cloud SDK, and Terraform completions when those tools are present.
+- Powerlevel10k is installed by bootstrap and the prompt config is linked from this repo so terminals look consistent across machines.
 
 ## License
 
