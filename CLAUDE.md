@@ -58,7 +58,15 @@ Both `cockpit` and `tmuxp` support YAML override files in the repo root. Parsing
 
 ### Neovim
 
-`init.lua` uses a `safe_require()` wrapper so missing plugins produce warnings instead of crashes. All three modules (`fzf`, `lsp`, `dapcfg`) guard their entry with `pcall(require, ...)` and return early if the required plugin is absent. LSP servers are configured but only activate if the server binary exists.
+`init.lua` uses a `safe_require()` wrapper so missing plugins produce warnings instead of crashes. Local modules (`plugins`, `fzf`, `lsp`, `telescopecfg`, `neotree`, `dapcfg`) guard their entry with `pcall(require, ...)` and return early if the required plugin is absent. LSP servers are configured but only activate if the server binary exists.
+
+### Shell completion portability
+
+The zsh completion setup is designed for multiple local accounts and machine
+shapes. It initializes completion non-interactively, trusts present Homebrew
+completion directories, strips legacy Intel paths when they are not useful, and
+loads dotfiles, Homebrew, Docker, OpenClaw, fzf, bun, nvm, Google Cloud SDK,
+and Terraform completions only when those tools are available.
 
 ## Conventions
 

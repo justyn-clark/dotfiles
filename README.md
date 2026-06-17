@@ -5,7 +5,7 @@ A portable, terminal-first macOS development environment built for speed and rep
 ## What's included
 
 - **Shell**: zsh with Powerlevel10k, history, populated completions, fzf integration, direnv, thefuck
-- **Editor**: Neovim with minimal LSP (lua, typescript, python, go) and optional DAP
+- **Editor**: Neovim with guarded plugin loading, LSP, Telescope, Neo-tree, fzf, and optional DAP
 - **Multiplexer**: tmux with Ctrl-a prefix, vim nav, session persistence (resurrect + continuum)
 - **Git**: delta side-by-side diffs, useful aliases, rerere
 - **Tools**: fzf, bat, eza, ripgrep, fd, jq, yq, just, tldr, hyperfine, dust, procs
@@ -151,6 +151,10 @@ j myapp              # pre-filtered
 
 `j` now also indexes `~/Agent/Projects`, so JCN repos are first-class in the jump cache.
 
+Shell completion setup is portable across machine accounts: Homebrew completion
+dirs are trusted only when present, legacy Intel completion paths are stripped
+early when they are not useful, and completion initializes non-interactively.
+
 
 ### JCN external env convention
 
@@ -213,8 +217,11 @@ See [Per-repo configuration](#per-repo-configuration) below.
   nvim/
     init.lua           # Neovim entry point
     lua/
+      plugins.lua      # Lazy plugin list
       fzf.lua          # fzf.vim keymaps
       lsp.lua          # LSP configuration
+      telescopecfg.lua # Telescope setup
+      neotree.lua      # Neo-tree setup
       dapcfg.lua       # DAP configuration (optional)
   guardrails/
     gitleaks.toml      # Gitleaks config
