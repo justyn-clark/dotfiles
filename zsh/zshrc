@@ -106,7 +106,9 @@ setopt HIST_REDUCE_BLANKS
 # General options
 setopt AUTO_CD
 setopt CORRECT
-setopt NO_CLOBBER
+# NO_CLOBBER intentionally not set: cmux's shell integration writes per-tab CLI
+# shims with a plain `>` redirect, which errors "file exists" under noclobber and
+# trips the Powerlevel10k instant-prompt warning on every new tab.
 
 # Pager
 export LESS="-R --mouse"
