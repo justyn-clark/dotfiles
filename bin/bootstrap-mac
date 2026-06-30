@@ -6,6 +6,10 @@ set -euo pipefail
 
 DOTFILES="$HOME/.dotfiles"
 
+# Source repository for the dotfiles. Override before running to install from a
+# fork, e.g. DOTFILES_REPO=https://github.com/me/dotfiles.git bin/bootstrap-mac
+DOTFILES_REPO="${DOTFILES_REPO:-https://github.com/justyn-clark/dotfiles.git}"
+
 echo "==> bootstrap-mac"
 
 # -------------------------------------------------------------------
@@ -21,7 +25,22 @@ else
 fi
 
 # -------------------------------------------------------------------
-# 2. Homebrew
+# 2. Dotfiles repository
+# -------------------------------------------------------------------
+# Ensure the repo is present at ~/.dotfiles so the rest of the script (and
+# link-dotfiles) has something to link from. This makes bootstrap self-contained:
+# it can be run from a clone kept anywhere -- or piped from curl on a fresh
+# machine -- and will fetch the repo into HOME if it is not already there.
+# A symlinked ~/.dotfiles (pointing at a clone elsewhere) is treated as present.
+if [[ -d "$DOTFILES" ]]; then
+  echo "==> ~/.dotfiles: ok"
+else
+  echo "==> ~/.dotfiles not found; cloning $DOTFILES_REPO ..."
+  git clone "$DOTFILES_REPO" "$DOTFILES"
+fi
+
+# -------------------------------------------------------------------
+# 3. Homebrew
 # -------------------------------------------------------------------
 if ! command -v brew &>/dev/null; then
   echo "==> Installing Homebrew..."
@@ -32,11 +51,12 @@ else
 fi
 
 # -------------------------------------------------------------------
-# 3. Brew packages
+# 4. Brew packages
 # -------------------------------------------------------------------
 PACKAGES=(
   git
   neovim
+  node
   tmux
   fzf
   zsh-completions
@@ -46,6 +66,7 @@ PACKAGES=(
   fd
   jq
   yq
+  just
   git-delta
   tldr
   thefuck
@@ -55,6 +76,7 @@ PACKAGES=(
   dust
   procs
   python
+  uv
   delve
 )
 
@@ -69,7 +91,7 @@ for pkg in "${PACKAGES[@]}"; do
 done
 
 # -------------------------------------------------------------------
-# 4. Zinit plugin manager
+# 5. Zinit plugin manager
 # -------------------------------------------------------------------
 ZINIT_DIR="$HOME/.zsh_plugins/zinit"
 if [[ ! -d "$ZINIT_DIR" ]]; then
@@ -80,7 +102,7 @@ else
 fi
 
 # -------------------------------------------------------------------
-# 5. TPM (Tmux Plugin Manager)
+# 6. TPM (Tmux Plugin Manager)
 # -------------------------------------------------------------------
 TPM_DIR="$HOME/.tmux/plugins/tpm"
 if [[ ! -d "$TPM_DIR" ]]; then
@@ -91,7 +113,7 @@ else
 fi
 
 # -------------------------------------------------------------------
-# 6. fzf shell integration
+# 7. fzf shell integration
 # -------------------------------------------------------------------
 echo "==> Configuring fzf..."
 if [[ -x "$(brew --prefix)/opt/fzf/install" ]]; then
@@ -99,7 +121,7 @@ if [[ -x "$(brew --prefix)/opt/fzf/install" ]]; then
 fi
 
 # -------------------------------------------------------------------
-# 7. debugpy for Python DAP
+# 8. debugpy for Python DAP
 # -------------------------------------------------------------------
 echo "==> Installing debugpy..."
 python3 -m pip install --user debugpy 2>/dev/null || \
@@ -107,13 +129,13 @@ python3 -m pip install --user debugpy 2>/dev/null || \
   echo "    debugpy: skipped (install manually: pip install debugpy)"
 
 # -------------------------------------------------------------------
-# 8. Link dotfiles
+# 9. Link dotfiles
 # -------------------------------------------------------------------
 echo "==> Running link-dotfiles..."
 bash "$DOTFILES/bin/link-dotfiles"
 
 # -------------------------------------------------------------------
-# 9. Install guardrails
+# 10. Install guardrails
 # -------------------------------------------------------------------
 echo "==> Running install-guardrails..."
 bash "$DOTFILES/bin/install-guardrails"

@@ -15,10 +15,11 @@ A portable, terminal-first macOS development environment built for speed and rep
 ## Installation (one-time setup)
 
 ```bash
-# 1. Clone to ~/.dotfiles (or symlink your existing clone there)
-git clone https://github.com/YOUR_USER/dotfiles.git ~/.dotfiles
+# 1. Clone to ~/.dotfiles (or symlink your existing clone there -- see below)
+git clone https://github.com/justyn-clark/dotfiles.git ~/.dotfiles
 
-# 2. Bootstrap -- installs all brew packages, symlinks configs, sets up hooks
+# 2. Bootstrap -- ensures ~/.dotfiles exists (clones it if missing),
+#    installs all brew packages, symlinks configs, sets up hooks
 ~/.dotfiles/bin/bootstrap-mac
 
 # 3. Restart your terminal
@@ -32,16 +33,34 @@ tmux
 j --reindex
 ```
 
-If you cloned somewhere else (e.g. `~/Documents/.../dotfiles`), symlink it:
+If you keep your working clone somewhere else (e.g. `~/Projects/dotfiles`), you have
+two options. Symlink `~/.dotfiles` to it so the repo you edit *is* the deployed config
+(one source of truth -- recommended):
 
 ```bash
 ln -s /path/to/your/dotfiles ~/.dotfiles
-~/.dotfiles/bin/bootstrap-mac
+~/.dotfiles/bin/bootstrap-mac          # sees the symlink, skips cloning
+```
+
+Or just run bootstrap straight from your clone -- it will clone the repo into
+`~/.dotfiles` for you if that path does not yet exist:
+
+```bash
+/path/to/your/dotfiles/bin/bootstrap-mac
+```
+
+Installing from a fork? Point bootstrap at it with `DOTFILES_REPO`:
+
+```bash
+DOTFILES_REPO=https://github.com/you/dotfiles.git ~/.dotfiles/bin/bootstrap-mac
 ```
 
 After bootstrap, all tools and commands are globally available via `~/bin`.
 
-A top-level `justfile` is also available in `~/.dotfiles` for common operator workflows:
+A top-level `justfile` is also available in `~/.dotfiles` for common operator workflows.
+These recipes require `just`, which `bootstrap-mac` installs -- so run the bootstrap above
+first. On a brand-new machine where `just` is not yet present, run `bin/bootstrap-mac`
+directly (or `brew install just`) before using these:
 
 ```bash
 cd ~/.dotfiles
@@ -57,7 +76,7 @@ just mma-status
 If you do not want to install packages or need a non-admin-safe setup, only link configs:
 
 ```bash
-git clone https://github.com/YOUR_USER/dotfiles.git ~/.dotfiles
+git clone https://github.com/justyn-clark/dotfiles.git ~/.dotfiles
 ~/.dotfiles/bin/link-dotfiles
 exec zsh
 ```
