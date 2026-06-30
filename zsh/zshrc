@@ -143,10 +143,10 @@ source "$HOME/.dotfiles/zsh/media.zsh"
 
 # --- Runtime toolchains ---
 
-# nvm
-export NVM_DIR="$HOME/.nvm"
-[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
-[[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion"
+# node: standardized on Homebrew node (single version across terminal, GUI apps,
+# and launchd). nvm + mise node management intentionally removed -- they shadowed
+# brew node only in interactive shells, so processes launched elsewhere got a
+# different node version. To restore per-project versions later, prefer one manager.
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
@@ -167,10 +167,9 @@ path_prepend_if_dir "$HOME/.yarn/bin"
 # cargo/rust
 path_prepend_if_dir "$HOME/.cargo/bin"
 
-# mise (polyglot version manager)
-if [[ -x "$HOME/.local/bin/mise" ]]; then
-  eval "$("$HOME/.local/bin/mise" activate zsh)"
-fi
+# mise (polyglot version manager) -- activation removed; standardized on Homebrew
+# node + neovim. The `mise` binary remains installed for manual/ad-hoc use, it just
+# no longer auto-activates and prepends its node/neovim onto PATH in every shell.
 
 # conda
 if [[ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]]; then
@@ -230,3 +229,6 @@ do
     source_if_quickly_readable "$gcloud_sdk/completion.zsh.inc"
   fi
 done
+
+# Hugging Face Hub: enable high-performance Xet transfers for faster downloads.
+export HF_XET_HIGH_PERFORMANCE=1
